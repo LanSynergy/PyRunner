@@ -1,39 +1,42 @@
 services:
   pyrunner:
-    build: .
+    image: hasanaboulhasan/pyrunner:latest
     container_name: pyrunner
-    ports:
-      - "${PORT:-8000}:8000"
-    volumes:
-      # Persist database and environments
-      - pyrunner_data:/app/data
-    environment:
-      # Required - container will fail to start if not set.
-      # Generate with the commands shown in .env.example
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
 
-      # Django settings - SECRET_KEY is also required (no default)
-      - SECRET_KEY=${SECRET_KEY:-}
-      - DEBUG=${DEBUG:-False}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - pyrunner_data:/app/data
+
+    environment:
+      # REQUIRED (set these in Dokploy UI or .env)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+
+      # Django settings
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
 
       # Email settings (optional)
-      - EMAIL_BACKEND=${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
-      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@pyrunner.local}
-      - RESEND_API_KEY=${RESEND_API_KEY:-}
-      - USE_RESEND=${USE_RESEND:-False}
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+      DEFAULT_FROM_EMAIL: noreply@pyrunner.local
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      USE_RESEND: "False"
 
       # Worker settings
-      - Q_WORKERS=${Q_WORKERS:-2}
+      Q_WORKERS: "2"
 
       # Gunicorn settings
-      - PORT=8000
-      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
-      - GUNICORN_THREADS=${GUNICORN_THREADS:-4}
-      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
+      PORT: "8000"
+      GUNICORN_WORKERS: "2"
+      GUNICORN_THREADS: "4"
+      GUNICORN_TIMEOUT: "120"
+
     restart: unless-stopped
+
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,4 +44,3 @@ services:
 
 volumes:
   pyrunner_data:
-    driver: local
